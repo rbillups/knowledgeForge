@@ -15,6 +15,7 @@ ALLOWED_ROUTES: frozenset[tuple[str, str]] = frozenset(
     {
         ("GET", "/health"),
         ("GET", "/api/v1/health/ready"),
+        ("OPTIONS", "/api/v1/public/portfolio/chat"),
         ("POST", "/api/v1/public/portfolio/chat"),
     }
 )

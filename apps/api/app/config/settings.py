@@ -1,3 +1,4 @@
+import json
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -6,6 +7,36 @@ from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 API_ROOT = Path(__file__).resolve().parents[2]
+
+
+def parse_cors_allowed_origins(value: object) -> list[str]:
+    if value is None:
+        return []
+
+    if isinstance(value, list):
+        candidates = [str(item).strip() for item in value]
+    elif isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return []
+
+        if raw.startswith("["):
+            parsed = json.loads(raw)
+            if not isinstance(parsed, list):
+                raise ValueError("CORS_ALLOWED_ORIGINS JSON value must be an array.")
+            candidates = [str(item).strip() for item in parsed]
+        else:
+            if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in {'"', "'"}:
+                raw = raw[1:-1].strip()
+            candidates = [part.strip() for part in raw.split(",")]
+    else:
+        raise TypeError("CORS_ALLOWED_ORIGINS must be a comma-separated string or JSON array.")
+
+    origins = [origin for origin in candidates if origin]
+    if any("," in origin for origin in origins):
+        raise ValueError("Each CORS origin must be a single origin without commas.")
+
+    return origins
 
 
 class Settings(BaseSettings):
@@ -24,9 +55,9 @@ class Settings(BaseSettings):
     supabase_service_role_key: str | None = None
     supabase_storage_bucket: str | None = None
 
-    cors_allowed_origins: str = Field(
-        default="http://localhost:3000",
-        description="Comma-separated frontend origins allowed by CORS.",
+    cors_allowed_origins: list[str] = Field(
+        default_factory=lambda: ["http://localhost:3000"],
+        description="Frontend origins allowed by CORS.",
     )
 
     chat_rate_limit_max_requests: int = Field(default=20, ge=1)
@@ -64,17 +95,12 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        origins = [
-            origin.strip()
-            for origin in self.cors_allowed_origins.split(",")
-            if origin.strip()
-        ]
-        return origins
+        return self.cors_allowed_origins
 
-    @field_validator("cors_allowed_origins")
+    @field_validator("cors_allowed_origins", mode="before")
     @classmethod
-    def strip_cors_value(cls, value: str) -> str:
-        return value.strip()
+    def normalize_cors_allowed_origins(cls, value: object) -> list[str]:
+        return parse_cors_allowed_origins(value)
 
     @model_validator(mode="after")
     def validate_environment(self) -> "Settings":

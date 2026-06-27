@@ -16,7 +16,7 @@ from app.api.routes import (
     public_portfolio,
     search,
 )
-from app.config.settings import settings
+from app.config.settings import get_settings
 from app.middleware.public_portfolio_lockdown import PublicPortfolioLockdownMiddleware
 from app.services.storage.factory import get_storage_backend
 
@@ -28,15 +28,17 @@ logger = logging.getLogger(__name__)
 
 
 def create_app() -> FastAPI:
+    app_settings = get_settings()
+
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        if settings.public_portfolio_mode:
+        if app_settings.public_portfolio_mode:
             logger.info("Public portfolio mode enabled")
         else:
             logger.info("Internal development mode enabled")
 
-        if settings.storage_provider == "local":
-            settings.upload_dir.mkdir(parents=True, exist_ok=True)
+        if app_settings.storage_provider == "local":
+            app_settings.upload_dir.mkdir(parents=True, exist_ok=True)
             logger.info("Local upload directory ready")
         else:
             logger.info("Using Supabase Storage provider")
@@ -49,9 +51,9 @@ def create_app() -> FastAPI:
 
         yield
 
-    docs_url = None if settings.public_portfolio_mode else "/docs"
-    redoc_url = None if settings.public_portfolio_mode else "/redoc"
-    openapi_url = None if settings.public_portfolio_mode else "/openapi.json"
+    docs_url = None if app_settings.public_portfolio_mode else "/docs"
+    redoc_url = None if app_settings.public_portfolio_mode else "/redoc"
+    openapi_url = None if app_settings.public_portfolio_mode else "/openapi.json"
 
     app = FastAPI(
         title="KnowledgeForge API",
@@ -103,7 +105,7 @@ def create_app() -> FastAPI:
     app.add_middleware(PublicPortfolioLockdownMiddleware)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
+        allow_origins=app_settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

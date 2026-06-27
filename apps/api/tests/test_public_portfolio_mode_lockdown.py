@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.config.settings import get_settings
+from app.config.settings import Settings, get_settings
 from app.database.session import get_db
 from app.middleware.public_portfolio_lockdown import (
     is_public_portfolio_route_allowed,
@@ -24,12 +24,16 @@ def _build_client(
 ) -> Generator[TestClient, None, None]:
     get_settings.cache_clear()
 
-    with patch(
-        "app.middleware.public_portfolio_lockdown.settings.public_portfolio_mode",
-        public_portfolio_mode,
-    ), patch(
-        "app.main.settings.public_portfolio_mode",
-        public_portfolio_mode,
+    test_settings = Settings(
+        database_url="postgresql://test:test@localhost:5432/test",
+        app_env="development",
+        storage_provider="local",
+        public_portfolio_mode=public_portfolio_mode,
+    )
+
+    with patch("app.main.get_settings", return_value=test_settings), patch(
+        "app.middleware.public_portfolio_lockdown.settings",
+        test_settings,
     ):
         from app.main import create_app
 
@@ -62,6 +66,13 @@ def test_route_allowlist_matches_required_public_endpoints() -> None:
     assert (
         is_public_portfolio_route_allowed(
             "POST",
+            "/api/v1/public/portfolio/chat",
+        )
+        is True
+    )
+    assert (
+        is_public_portfolio_route_allowed(
+            "OPTIONS",
             "/api/v1/public/portfolio/chat",
         )
         is True
