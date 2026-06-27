@@ -4,10 +4,19 @@ import type { ChatCitation } from "@/types/chat";
 type CitationCardProps = {
   citation: ChatCitation;
   index: number;
+  showSimilarityScore?: boolean;
+  showExcerptInline?: boolean;
 };
 
-export function CitationCard({ citation, index }: CitationCardProps) {
-  const similarityLabel = formatSimilarityScore(citation.similarity_score);
+export function CitationCard({
+  citation,
+  index,
+  showSimilarityScore = true,
+  showExcerptInline = false,
+}: CitationCardProps) {
+  const similarityLabel = showSimilarityScore
+    ? formatSimilarityScore(citation.similarity_score)
+    : null;
 
   return (
     <div className="rounded-lg border border-slate-200 bg-slate-50">
@@ -35,32 +44,40 @@ export function CitationCard({ citation, index }: CitationCardProps) {
         )}
       </div>
 
-      <details className="group border-t border-slate-200">
-        <summary className="cursor-pointer list-none px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 [&::-webkit-details-marker]:hidden">
-          <span className="inline-flex items-center gap-1">
-            View source
-            <svg
-              className="h-3.5 w-3.5 transition-transform group-open:rotate-180"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m19.5 8.25-7.5 7.5-7.5-7.5"
-              />
-            </svg>
-          </span>
-        </summary>
+      {showExcerptInline ? (
         <div className="border-t border-slate-200 bg-white px-3 py-3">
           <p className="text-sm leading-relaxed text-slate-600">
             {citation.chunk_content}
           </p>
         </div>
-      </details>
+      ) : (
+        <details className="group border-t border-slate-200">
+          <summary className="cursor-pointer list-none px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-100 [&::-webkit-details-marker]:hidden">
+            <span className="inline-flex items-center gap-1">
+              View source
+              <svg
+                className="h-3.5 w-3.5 transition-transform group-open:rotate-180"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="m19.5 8.25-7.5 7.5-7.5-7.5"
+                />
+              </svg>
+            </span>
+          </summary>
+          <div className="border-t border-slate-200 bg-white px-3 py-3">
+            <p className="text-sm leading-relaxed text-slate-600">
+              {citation.chunk_content}
+            </p>
+          </div>
+        </details>
+      )}
     </div>
   );
 }

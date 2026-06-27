@@ -155,6 +155,7 @@ export function PortfolioAskInterface() {
                     collectionId={null}
                     onFeedbackSubmitted={() => undefined}
                     insufficientContextNote={PUBLIC_INSUFFICIENT_CONTEXT_NOTE}
+                    citationsPresentation="collapsed"
                   />
                 ))}
                 <div ref={messagesEndRef} />

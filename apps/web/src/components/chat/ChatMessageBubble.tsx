@@ -1,14 +1,18 @@
 import { AnswerFeedbackControls } from "@/components/chat/AnswerFeedbackControls";
 import { CitationCard } from "@/components/chat/CitationCard";
+import { CitationDisclosure } from "@/components/chat/CitationDisclosure";
 import { INSUFFICIENT_CONTEXT_NOTE, POLICY_BLOCKED_NOTE } from "@/lib/chat";
 import { FEEDBACK_SUCCESS_MESSAGE } from "@/lib/feedback";
 import type { ChatMessage } from "@/types/chat";
+
+type CitationsPresentation = "expanded" | "collapsed";
 
 type ChatMessageBubbleProps = {
   message: ChatMessage;
   collectionId: number | null;
   onFeedbackSubmitted: (messageId: string) => void;
   insufficientContextNote?: string;
+  citationsPresentation?: CitationsPresentation;
 };
 
 function canCollectFeedback(message: ChatMessage): boolean {
@@ -27,6 +31,7 @@ export function ChatMessageBubble({
   collectionId,
   onFeedbackSubmitted,
   insufficientContextNote = INSUFFICIENT_CONTEXT_NOTE,
+  citationsPresentation = "expanded",
 }: ChatMessageBubbleProps) {
   const isUser = message.role === "user";
   const isLoading = message.role === "loading";
@@ -79,20 +84,23 @@ export function ChatMessageBubble({
 
         {message.citations &&
           message.citations.length > 0 &&
-          !message.policyBlocked && (
-          <div className="w-full space-y-2 pt-1">
-            <p className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
-              Sources
-            </p>
-            {message.citations.map((citation, index) => (
-              <CitationCard
-                key={`${citation.filename}-${citation.chunk_index}-${index}`}
-                citation={citation}
-                index={index + 1}
-              />
-            ))}
-          </div>
-        )}
+          !message.policyBlocked &&
+          (citationsPresentation === "collapsed" ? (
+            <CitationDisclosure citations={message.citations} />
+          ) : (
+            <div className="w-full space-y-2 pt-1">
+              <p className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                Sources
+              </p>
+              {message.citations.map((citation, index) => (
+                <CitationCard
+                  key={`${citation.filename}-${citation.chunk_index}-${index}`}
+                  citation={citation}
+                  index={index + 1}
+                />
+              ))}
+            </div>
+          ))}
 
         {showFeedback && (
           <AnswerFeedbackControls
