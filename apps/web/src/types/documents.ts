@@ -37,3 +37,9 @@ export type DocumentUploadResponse = {
   page_count: number | null;
   message: string;
 };
+
+export type DocumentDeleteResponse = {
+  document_id: number;
+  filename: string;
+  deleted: boolean;
+};

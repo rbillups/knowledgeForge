@@ -43,3 +43,18 @@ class DocumentReindexResponse(BaseModel):
     message: str = Field(
         examples=["Document reindexed successfully."],
     )
+
+
+class DocumentDeleteResponse(BaseModel):
+    document_id: int = Field(
+        description="Identifier of the deleted document.",
+        examples=[42],
+    )
+    filename: str = Field(
+        description="Filename of the deleted document.",
+        examples=["test-notes.md"],
+    )
+    deleted: bool = Field(
+        description="Whether the document was deleted successfully.",
+        examples=[True],
+    )

@@ -42,7 +42,7 @@ def create_app() -> FastAPI:
             },
             {
                 "name": "Documents",
-                "description": "Document upload, listing, and indexing endpoints.",
+                "description": "Document upload, listing, reindexing, and deletion endpoints.",
             },
             {
                 "name": "Search",

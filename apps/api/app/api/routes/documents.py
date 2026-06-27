@@ -5,13 +5,20 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.schemas.document import (
+    DocumentDeleteResponse,
     DocumentReindexResponse,
     DocumentResponse,
     DocumentUploadResponse,
 )
-from app.services.document_service import list_documents, reindex_document, upload_document
+from app.services.document_service import (
+    delete_document,
+    list_documents,
+    reindex_document,
+    upload_document,
+)
 from app.services.exceptions import (
     CollectionNotFoundError,
+    DocumentDeletionError,
     DocumentNotFoundError,
     DocumentProcessingError,
     EmbeddingGenerationError,
@@ -138,5 +145,34 @@ def reindex_document_endpoint(
         logger.error("Embedding generation failed during reindex for %s", document_id)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=exc.message,
+        ) from exc
+
+
+@router.delete(
+    "/{document_id}",
+    response_model=DocumentDeleteResponse,
+    summary="Delete a document",
+    description=(
+        "Remove a document from its knowledge collection. Associated chunks "
+        "and embeddings are deleted automatically. The stored upload file is "
+        "removed when it exists under that document's upload directory."
+    ),
+)
+def delete_document_endpoint(
+    document_id: int,
+    db: Session = Depends(get_db),
+) -> DocumentDeleteResponse:
+    try:
+        return delete_document(db, document_id)
+    except DocumentNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=exc.message,
+        ) from exc
+    except DocumentDeletionError as exc:
+        logger.error("Document deletion failed for %s", document_id)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=exc.message,
         ) from exc

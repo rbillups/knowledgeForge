@@ -48,7 +48,7 @@ export function mapDocumentStatusForDisplay(
   }
 }
 
-import { UploadRequestError } from "@/lib/api";
+import { DeleteRequestError, UploadRequestError } from "@/lib/api";
 
 export function getUploadErrorMessage(error: unknown): string {
   if (error instanceof UploadRequestError) {
@@ -84,5 +84,26 @@ export function getUploadErrorMessage(error: unknown): string {
   return "Something went wrong while uploading your document. Please try again.";
 }
 
+export function getDeleteErrorMessage(error: unknown): string {
+  if (error instanceof DeleteRequestError) {
+    if (error.status === 404) {
+      return "That document could not be found. Refresh the page and try again.";
+    }
+
+    if (error.status && error.status >= 500) {
+      return "We could not delete that document right now. Please try again shortly.";
+    }
+  }
+
+  if (error instanceof TypeError) {
+    return "We could not reach the KnowledgeForge API. Make sure the backend is running and try again.";
+  }
+
+  return "Something went wrong while deleting the document. Please try again.";
+}
+
 export const UPLOAD_SUCCESS_MESSAGE =
   "Document indexed successfully. It is ready for future AI search.";
+
+export const DELETE_SUCCESS_MESSAGE =
+  "Document deleted successfully. Its chunks and embeddings were removed from the collection.";

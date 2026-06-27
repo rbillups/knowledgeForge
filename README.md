@@ -37,6 +37,20 @@ python -m app.scripts.run_portfolio_eval --fail-on-error
 
 Results are written to `reports/portfolio-eval-results.json`.
 
+## Portfolio Collection Hygiene
+
+The Portfolio Knowledge Base should contain only intentional, public-safe source material. Temporary development files such as `test-notes.md` or ad hoc uploads should be removed before public deployment so they do not affect retrieval, chat answers, or evaluation results.
+
+Use the `/documents` page or `DELETE /api/v1/documents/{document_id}` to remove unwanted documents. Deletion removes associated chunks, embeddings, and the stored upload file for that document.
+
+To review what is currently indexed:
+
+```bash
+curl http://localhost:8000/api/v1/documents
+```
+
+Or open the Documents page in the web app and review filenames, source types, and collection names.
+
 ## Planned Stack
 
 - Frontend: Next.js, TypeScript, Tailwind CSS

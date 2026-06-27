@@ -1,6 +1,10 @@
 import type { Collection } from "@/types/collection";
 import type { ChatResponse } from "@/types/chat";
-import type { Document, DocumentUploadResponse } from "@/types/documents";
+import type {
+  Document,
+  DocumentDeleteResponse,
+  DocumentUploadResponse,
+} from "@/types/documents";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -86,6 +90,21 @@ export async function uploadDocument(
   return response.json() as Promise<DocumentUploadResponse>;
 }
 
+export async function deleteDocument(
+  documentId: number,
+): Promise<DocumentDeleteResponse> {
+  const response = await fetch(`${getApiUrl()}/api/v1/documents/${documentId}`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    const detail = await readErrorMessage(response);
+    throw new DeleteRequestError(response.status, detail);
+  }
+
+  return response.json() as Promise<DocumentDeleteResponse>;
+}
+
 export async function chatWithKnowledgeBase(
   collectionId: number,
   question: string,
@@ -126,6 +145,16 @@ export class UploadRequestError extends Error {
   constructor(status: number, detail: string) {
     super(detail);
     this.name = "UploadRequestError";
+    this.status = status;
+  }
+}
+
+export class DeleteRequestError extends Error {
+  status: number;
+
+  constructor(status: number, detail: string) {
+    super(detail);
+    this.name = "DeleteRequestError";
     this.status = status;
   }
 }

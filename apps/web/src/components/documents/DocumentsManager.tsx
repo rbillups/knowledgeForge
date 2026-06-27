@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { DeleteConfirmDialog } from "@/components/documents/DeleteConfirmDialog";
 import { DocumentTable } from "@/components/documents/DocumentTable";
 import { StatusBadge } from "@/components/documents/StatusBadge";
-import { getCollections, getDocuments, uploadDocument } from "@/lib/api";
+import { deleteDocument, getCollections, getDocuments, uploadDocument } from "@/lib/api";
 import {
+  DELETE_SUCCESS_MESSAGE,
+  getDeleteErrorMessage,
   getUploadErrorMessage,
   isAllowedUploadFile,
   UPLOAD_SUCCESS_MESSAGE,
@@ -30,6 +33,8 @@ export function DocumentsManager() {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Document | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
 
   const loadPageData = useCallback(async () => {
@@ -138,6 +143,44 @@ export function DocumentsManager() {
       });
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleDeleteRequest = (document: Document) => {
+    setFeedback(null);
+    setDeleteTarget(document);
+  };
+
+  const handleDeleteCancel = () => {
+    if (!isDeleting) {
+      setDeleteTarget(null);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setFeedback(null);
+
+    try {
+      await deleteDocument(deleteTarget.id);
+      const nextDocuments = await getDocuments();
+      setDocuments(nextDocuments);
+      setDeleteTarget(null);
+      setFeedback({
+        type: "success",
+        message: DELETE_SUCCESS_MESSAGE,
+      });
+    } catch (error) {
+      setFeedback({
+        type: "error",
+        message: getDeleteErrorMessage(error),
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -259,7 +302,20 @@ export function DocumentsManager() {
         )}
       </section>
 
-      <DocumentTable documents={documents} isLoading={isLoading} />
+      <DocumentTable
+        documents={documents}
+        isLoading={isLoading}
+        deletingFilename={isDeleting ? deleteTarget?.filename ?? null : null}
+        onDeleteRequest={handleDeleteRequest}
+      />
+
+      <DeleteConfirmDialog
+        filename={deleteTarget?.filename ?? ""}
+        isOpen={deleteTarget !== null}
+        isDeleting={isDeleting}
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={handleDeleteCancel}
+      />
     </div>
   );
 }

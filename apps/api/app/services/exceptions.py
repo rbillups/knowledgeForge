@@ -35,6 +35,17 @@ class DocumentNotFoundError(Exception):
         super().__init__(self.message)
 
 
+class DocumentDeletionError(Exception):
+    """Raised when a document cannot be deleted."""
+
+    def __init__(self, document_id: int) -> None:
+        self.document_id = document_id
+        self.message = (
+            f"Document {document_id} could not be deleted. Please try again."
+        )
+        super().__init__(self.message)
+
+
 class MissingApiKeyError(Exception):
     """Raised when the OpenAI API key is not configured."""
 

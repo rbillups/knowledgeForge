@@ -9,6 +9,7 @@ from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
 from app.models.knowledge_collection import KnowledgeCollection
 from app.schemas.document import (
+    DocumentDeleteResponse,
     DocumentReindexResponse,
     DocumentResponse,
     DocumentUploadResponse,
@@ -17,6 +18,7 @@ from app.services.chunk_embedding_service import apply_embeddings_to_chunks
 from app.services.chunking import chunk_text, estimate_tokens
 from app.services.exceptions import (
     CollectionNotFoundError,
+    DocumentDeletionError,
     DocumentNotFoundError,
     DocumentProcessingError,
     EmbeddingGenerationError,
@@ -308,6 +310,36 @@ def reindex_document(db: Session, document_id: int) -> DocumentReindexResponse:
         ) from None
 
 
+def delete_document(db: Session, document_id: int) -> DocumentDeleteResponse:
+    document = db.get(Document, document_id)
+    if document is None:
+        raise DocumentNotFoundError(document_id)
+
+    filename = document.filename
+    upload_path = _find_uploaded_file(document.id, document.filename)
+
+    try:
+        # document_chunks rows cascade via FK on delete; ORM relationship also
+        # uses delete-orphan for in-session cleanup.
+        db.delete(document)
+        db.commit()
+    except Exception:
+        db.rollback()
+        logger.exception("Failed to delete document %s", document_id)
+        raise DocumentDeletionError(document_id) from None
+
+    if upload_path is not None:
+        _remove_upload_file(upload_path, document_id=document_id)
+
+    logger.info("Deleted document %s", document_id)
+
+    return DocumentDeleteResponse(
+        document_id=document_id,
+        filename=filename,
+        deleted=True,
+    )
+
+
 def _index_document_from_path(
     db: Session,
     document: Document,
@@ -367,6 +399,28 @@ def _find_uploaded_file(document_id: int, filename: str) -> Path | None:
     if destination.exists():
         return destination
     return None
+
+
+def _remove_upload_file(upload_path: Path, *, document_id: int) -> None:
+    expected_parent = (settings.upload_dir / str(document_id)).resolve()
+    resolved_path = upload_path.resolve()
+
+    if expected_parent not in resolved_path.parents:
+        logger.warning(
+            "Skipped removing upload file outside document directory for %s",
+            document_id,
+        )
+        return
+
+    try:
+        resolved_path.unlink(missing_ok=True)
+        if expected_parent.exists() and not any(expected_parent.iterdir()):
+            expected_parent.rmdir()
+    except OSError:
+        logger.warning(
+            "Could not remove upload file for document %s",
+            document_id,
+        )
 
 
 def _mark_document_failed(db: Session, document: Document, message: str) -> None:
