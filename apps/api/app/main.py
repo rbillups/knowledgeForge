@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routes import chat, collections, documents, health, search
+from app.api.routes import chat, collections, dashboard, documents, health, search
 from app.config.settings import settings
 
 logging.basicConfig(
@@ -45,6 +45,10 @@ def create_app() -> FastAPI:
                 "description": "Document upload, listing, reindexing, and deletion endpoints.",
             },
             {
+                "name": "Dashboard",
+                "description": "Operational dashboard metrics and summaries.",
+            },
+            {
                 "name": "Search",
                 "description": "Semantic retrieval over indexed document chunks.",
             },
@@ -78,6 +82,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
     app.include_router(collections.router, prefix="/api/v1")
+    app.include_router(dashboard.router, prefix="/api/v1")
     app.include_router(documents.router, prefix="/api/v1")
     app.include_router(search.router, prefix="/api/v1")
     app.include_router(chat.router, prefix="/api/v1")

@@ -1,5 +1,6 @@
 import type { Collection } from "@/types/collection";
 import type { ChatResponse } from "@/types/chat";
+import type { DashboardSummary } from "@/types/dashboard";
 import type {
   Document,
   DocumentDeleteResponse,
@@ -43,6 +44,18 @@ export async function getApiHealth(): Promise<HealthResponse> {
   }
 
   return response.json() as Promise<HealthResponse>;
+}
+
+export async function getDashboardSummary(): Promise<DashboardSummary> {
+  const response = await fetch(`${getApiUrl()}/api/v1/dashboard/summary`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to load dashboard summary.");
+  }
+
+  return response.json() as Promise<DashboardSummary>;
 }
 
 export async function getCollections(): Promise<Collection[]> {
