@@ -46,6 +46,15 @@ class DocumentDeletionError(Exception):
         super().__init__(self.message)
 
 
+class PortfolioKnowledgeBaseUnavailableError(Exception):
+    """Raised when the portfolio collection is missing."""
+
+    message = "The portfolio knowledge base is not available."
+
+    def __init__(self) -> None:
+        super().__init__(self.message)
+
+
 class MissingApiKeyError(Exception):
     """Raised when the OpenAI API key is not configured."""
 

@@ -8,6 +8,7 @@ type ChatMessageBubbleProps = {
   message: ChatMessage;
   collectionId: number | null;
   onFeedbackSubmitted: (messageId: string) => void;
+  insufficientContextNote?: string;
 };
 
 function canCollectFeedback(message: ChatMessage): boolean {
@@ -25,6 +26,7 @@ export function ChatMessageBubble({
   message,
   collectionId,
   onFeedbackSubmitted,
+  insufficientContextNote = INSUFFICIENT_CONTEXT_NOTE,
 }: ChatMessageBubbleProps) {
   const isUser = message.role === "user";
   const isLoading = message.role === "loading";
@@ -72,7 +74,7 @@ export function ChatMessageBubble({
         )}
 
         {message.insufficientContext && !message.isError && !message.policyBlocked && (
-          <p className="px-1 text-xs text-slate-500">{INSUFFICIENT_CONTEXT_NOTE}</p>
+          <p className="px-1 text-xs text-slate-500">{insufficientContextNote}</p>
         )}
 
         {message.citations &&

@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import { isPublicPortfolioMode } from "@/lib/config";
 import { mainNavItems } from "@/data/mock/navigation";
+
+const publicNavItems = [
+  {
+    label: "Ask About My Work",
+    href: "/ask",
+    description: "Public portfolio assistant",
+  },
+];
 
 function NavIcon({ href }: { href: string }) {
   const iconClass = "h-5 w-5 shrink-0";
@@ -12,6 +22,12 @@ function NavIcon({ href }: { href: string }) {
       return (
         <svg className={iconClass} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+        </svg>
+      );
+    case "/ask":
+      return (
+        <svg className={iconClass} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a2.252 2.252 0 0 0 1.023-1.908c0-.538-.214-1.055-.595-1.436L18.75 12.75l-.002-.003a2.252 2.252 0 0 0-1.908-1.023h-3.675a2.252 2.252 0 0 0-2.15 1.588l-.003.012a2.25 2.25 0 0 1-2.15 1.588H6.75a2.25 2.25 0 0 1-2.25-2.25V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.084M15.75 18H18" />
         </svg>
       );
     case "/dashboard":
@@ -39,6 +55,7 @@ function NavIcon({ href }: { href: string }) {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const navItems = isPublicPortfolioMode() ? publicNavItems : mainNavItems;
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
@@ -48,7 +65,7 @@ export function Sidebar() {
         </span>
       </div>
       <nav className="flex-1 space-y-1 p-3">
-        {mainNavItems.map((item) => {
+        {navItems.map((item) => {
           const isActive =
             item.href === "/"
               ? pathname === "/"

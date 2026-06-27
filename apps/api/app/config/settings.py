@@ -11,6 +11,7 @@ API_ROOT = Path(__file__).resolve().parents[2]
 class Settings(BaseSettings):
     app_env: Literal["development", "production"] = "development"
     storage_provider: Literal["local", "supabase"] = "local"
+    public_portfolio_mode: bool = False
 
     database_url: str
     openai_api_key: str | None = None

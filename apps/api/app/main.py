@@ -13,9 +13,11 @@ from app.api.routes import (
     documents,
     feedback,
     health,
+    public_portfolio,
     search,
 )
 from app.config.settings import settings
+from app.middleware.public_portfolio_lockdown import PublicPortfolioLockdownMiddleware
 from app.services.storage.factory import get_storage_backend
 
 logging.basicConfig(
@@ -28,6 +30,11 @@ logger = logging.getLogger(__name__)
 def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
+        if settings.public_portfolio_mode:
+            logger.info("Public portfolio mode enabled")
+        else:
+            logger.info("Internal development mode enabled")
+
         if settings.storage_provider == "local":
             settings.upload_dir.mkdir(parents=True, exist_ok=True)
             logger.info("Local upload directory ready")
@@ -42,6 +49,10 @@ def create_app() -> FastAPI:
 
         yield
 
+    docs_url = None if settings.public_portfolio_mode else "/docs"
+    redoc_url = None if settings.public_portfolio_mode else "/redoc"
+    openapi_url = None if settings.public_portfolio_mode else "/openapi.json"
+
     app = FastAPI(
         title="KnowledgeForge API",
         description=(
@@ -50,6 +61,9 @@ def create_app() -> FastAPI:
         ),
         version="0.1.0",
         lifespan=lifespan,
+        docs_url=docs_url,
+        redoc_url=redoc_url,
+        openapi_url=openapi_url,
         openapi_tags=[
             {
                 "name": "Health",
@@ -79,9 +93,14 @@ def create_app() -> FastAPI:
                 "name": "Feedback",
                 "description": "Anonymous answer feedback and operational summaries.",
             },
+            {
+                "name": "Public Portfolio",
+                "description": "Public portfolio assistant scoped to the portfolio collection.",
+            },
         ],
     )
 
+    app.add_middleware(PublicPortfolioLockdownMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -108,6 +127,7 @@ def create_app() -> FastAPI:
     app.include_router(documents.router, prefix="/api/v1")
     app.include_router(search.router, prefix="/api/v1")
     app.include_router(chat.router, prefix="/api/v1")
+    app.include_router(public_portfolio.router, prefix="/api/v1")
     app.include_router(feedback.router, prefix="/api/v1")
 
     return app

@@ -51,6 +51,65 @@ curl http://localhost:8000/api/v1/documents
 
 Or open the Documents page in the web app and review filenames, source types, and collection names.
 
+## Public Portfolio Assistant (`/ask`)
+
+KnowledgeForge supports two chat experiences:
+
+| Experience | Route | API | Scope |
+| --- | --- | --- | --- |
+| Internal/general chat | `/chat` | `POST /api/v1/chat` | Client selects `collection_id` |
+| Public portfolio assistant | `/ask` | `POST /api/v1/public/portfolio/chat` | Permanently scoped to slug `portfolio` |
+
+The public endpoint never accepts a `collection_id` from clients. It resolves the Portfolio Knowledge Base internally and reuses the same grounded chat, privacy guardrails, and rate limiting as the internal endpoint.
+
+Future public deployment intent: host the assistant at `rkbillups.com/ask` or `ask.rkbillups.com`.
+
+### Enable public portfolio mode locally
+
+In `apps/web/.env.local`:
+
+```bash
+NEXT_PUBLIC_PUBLIC_PORTFOLIO_MODE=true
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+When enabled:
+
+- Public navigation exposes `/ask` only
+- Internal routes (`/`, `/dashboard`, `/documents`, `/chat`) show a restricted-access screen
+- This is a launch boundary only — **not authentication**
+
+With the flag set to `false` or omitted, the full internal workspace remains available for development.
+
+### Phase B: Backend API lockdown (required for public deployment)
+
+Frontend route hiding is **not** sufficient security for a public deployment. The backend must also enforce a public API surface.
+
+Set in the **deployed backend** environment:
+
+```bash
+PUBLIC_PORTFOLIO_MODE=true
+```
+
+When `PUBLIC_PORTFOLIO_MODE=true`, the API allows only:
+
+| Method | Path |
+| --- | --- |
+| `GET` | `/health` |
+| `GET` | `/api/v1/health/ready` |
+| `POST` | `/api/v1/public/portfolio/chat` |
+
+All other routes—including internal chat, documents, collections, dashboard, feedback, search, upload, delete, reindex, and OpenAPI docs—return a safe `404 Not found` response without exposing internal architecture.
+
+When `PUBLIC_PORTFOLIO_MODE=false` (local default), the full internal/admin API remains available for development.
+
+| Layer | Flag | Purpose |
+| --- | --- | --- |
+| Frontend | `NEXT_PUBLIC_PUBLIC_PORTFOLIO_MODE` | Hides internal pages in the web UI |
+| Backend | `PUBLIC_PORTFOLIO_MODE` | Enforces the public API allowlist |
+
+Phase C will add authentication so the full KnowledgeForge admin workspace can be deployed privately later. Until then, keep internal admin APIs disabled in production by leaving `PUBLIC_PORTFOLIO_MODE=true` on the public backend deployment.
+
 ## Local Development Configuration
 
 Copy the backend environment template and configure local values:
@@ -68,6 +127,7 @@ Recommended local settings:
 | `DATABASE_URL` | Your Supabase Postgres connection string |
 | `OPENAI_API_KEY` | Your OpenAI API key |
 | `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` |
+| `PUBLIC_PORTFOLIO_MODE` | `false` |
 
 Local uploads are stored under `apps/api/uploads/` using storage keys shaped like `{document_id}/{filename}`.
 
@@ -89,6 +149,7 @@ Set these variables in your deployment platform before going live:
 | `SUPABASE_STORAGE_BUCKET` | Yes for Supabase storage | Private bucket for uploaded documents |
 | `CHAT_RATE_LIMIT_MAX_REQUESTS` | Optional | Default `20` |
 | `CHAT_RATE_LIMIT_WINDOW_SECONDS` | Optional | Default `600` (10 minutes) |
+| `PUBLIC_PORTFOLIO_MODE` | Yes for Phase B public API | Must be `true` on the public portfolio backend |
 
 ## Supabase Storage Setup
 

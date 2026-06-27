@@ -157,6 +157,37 @@ export async function chatWithKnowledgeBase(
   return response.json() as Promise<ChatResponse>;
 }
 
+export async function chatWithPublicPortfolio(
+  question: string,
+  retrievalLimit?: number,
+): Promise<ChatResponse> {
+  const payload: {
+    question: string;
+    retrieval_limit?: number;
+  } = {
+    question: question.trim(),
+  };
+
+  if (retrievalLimit !== undefined) {
+    payload.retrieval_limit = retrievalLimit;
+  }
+
+  const response = await fetch(`${getApiUrl()}/api/v1/public/portfolio/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const detail = await readErrorMessage(response);
+    throw new ChatRequestError(response.status, detail);
+  }
+
+  return response.json() as Promise<ChatResponse>;
+}
+
 export async function submitFeedback(
   payload: FeedbackCreateRequest,
 ): Promise<FeedbackCreateResponse> {
