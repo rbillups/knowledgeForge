@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routes import collections, documents, health, search
+from app.api.routes import chat, collections, documents, health, search
 from app.config.settings import settings
 
 logging.basicConfig(
@@ -48,6 +48,10 @@ def create_app() -> FastAPI:
                 "name": "Search",
                 "description": "Semantic retrieval over indexed document chunks.",
             },
+            {
+                "name": "Chat",
+                "description": "Grounded question answering over retrieved source chunks.",
+            },
         ],
     )
 
@@ -76,6 +80,7 @@ def create_app() -> FastAPI:
     app.include_router(collections.router, prefix="/api/v1")
     app.include_router(documents.router, prefix="/api/v1")
     app.include_router(search.router, prefix="/api/v1")
+    app.include_router(chat.router, prefix="/api/v1")
 
     return app
 

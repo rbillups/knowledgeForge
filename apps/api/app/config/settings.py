@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     database_url: str
     openai_api_key: str | None = None
     embedding_model: str = "text-embedding-3-small"
+    chat_model: str = "gpt-4.1-mini"
     upload_dir: Path = API_ROOT / "uploads"
 
     model_config = SettingsConfigDict(

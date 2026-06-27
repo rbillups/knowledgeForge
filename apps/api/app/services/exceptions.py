@@ -55,3 +55,14 @@ class EmbeddingGenerationError(Exception):
     ) -> None:
         self.message = message
         super().__init__(message)
+
+
+class ChatGenerationError(Exception):
+    """Raised when grounded chat generation fails."""
+
+    def __init__(
+        self,
+        message: str = "Unable to generate a chat response at this time.",
+    ) -> None:
+        self.message = message
+        super().__init__(message)
