@@ -2,22 +2,24 @@
 
 **Category:** Academic background
 
-## Degrees
+---
 
-### M.S. Cybersecurity
-
-- **Institution:** Kennesaw State University
-- **Expected completion:** 2026
-
-### B.S. Computer Science — Artificial Intelligence concentration
+## M.S. Cybersecurity
 
 - **Institution:** Kennesaw State University
-- **Completed:** 2023
+- **Completed:** May 2026
+- **Focus:** Cybersecurity principles, secure systems thinking, and graduate-level security coursework applied to software engineering practice
 
-## How education relates to current work
+---
 
-Key'Shawn's academic background in computer science and artificial intelligence supports his interest in software engineering, automation, backend systems, and AI-enabled product development.
+## B.S. Computer Science — Artificial Intelligence concentration
 
-## Boundaries
+- **Institution:** Kennesaw State University
+- **Completed:** May 2023
+- **Focus:** Computer science fundamentals, software engineering, artificial intelligence, and machine learning coursework
 
-This section documents formal education only. It does not list unverified certifications, licenses, or credentials beyond the degrees above.
+---
+
+## Notes
+
+This section documents formal degrees only. It does not list unverified certifications, licenses, or credentials beyond the degrees above.

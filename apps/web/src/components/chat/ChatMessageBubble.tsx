@@ -1,4 +1,5 @@
 import { AnswerFeedbackControls } from "@/components/chat/AnswerFeedbackControls";
+import { AssistantMarkdown } from "@/components/chat/AssistantMarkdown";
 import { CitationCard } from "@/components/chat/CitationCard";
 import { CitationDisclosure } from "@/components/chat/CitationDisclosure";
 import { INSUFFICIENT_CONTEXT_NOTE, POLICY_BLOCKED_NOTE } from "@/lib/chat";
@@ -13,6 +14,7 @@ type ChatMessageBubbleProps = {
   onFeedbackSubmitted: (messageId: string) => void;
   insufficientContextNote?: string;
   citationsPresentation?: CitationsPresentation;
+  renderMarkdown?: boolean;
 };
 
 function canCollectFeedback(message: ChatMessage): boolean {
@@ -32,6 +34,7 @@ export function ChatMessageBubble({
   onFeedbackSubmitted,
   insufficientContextNote = INSUFFICIENT_CONTEXT_NOTE,
   citationsPresentation = "expanded",
+  renderMarkdown = false,
 }: ChatMessageBubbleProps) {
   const isUser = message.role === "user";
   const isLoading = message.role === "loading";
@@ -69,6 +72,8 @@ export function ChatMessageBubble({
               </span>
               {message.content}
             </span>
+          ) : renderMarkdown && !isUser ? (
+            <AssistantMarkdown content={message.content} />
           ) : (
             message.content
           )}

@@ -1,45 +1,58 @@
 # Skills
 
-**Category:** Technical skills and interests
+**Category:** Technical skills
 
-## Primary strengths
+Skills reflect tools and technologies used in professional work and portfolio projects. This section lists capabilities supported by experience and project source material—not self-assigned proficiency ratings.
 
-- **Python** — strongest language; used for automation, backend services, tooling, and testing
-- **Java** — strong object-oriented programming foundation
-- **TypeScript** — practical experience through Next.js, React Native, and portfolio work
+These groups connect to the work Key'Shawn does today: building reliable backend and automation systems, shipping with testing and CI/CD discipline, applying AI retrieval patterns in personal products, and grounding engineering decisions in cybersecurity-aware practices.
 
-## Data and infrastructure familiarity
+---
 
-- **SQL** and relational-data workflows
-- **Docker** — practical familiarity with containerized development
-- **Supabase / PostgreSQL** — used in personal projects
-- **Git, GitHub, and GitLab**
-- **GitHub Actions runner support** (including AWS-hosted runners)
-- **PyTest** for automated validation
+## Backend & Automation
+
+- **Python** — automation, internal tools, backend services, and testing
+- **Java** — object-oriented programming foundation
+- **SQL** and database-backed workflows
 - **FastAPI** for backend APIs
-- **Next.js** and **React Native / Expo** for web and mobile work
+- **Structured-data workflows** and object-oriented maintenance
 
-## Collaboration and delivery tools
+---
 
-- **Jira** — work tracking
-- **Confluence** — collaboration and documentation
+## Delivery, Testing & DevOps
 
-## AI / ML background
+- **PyTest** for automated validation
+- **Docker** — containerized development environments
+- **Git, GitHub, and GitLab**
+- **GitLab CI/CD** pipeline support
+- **GitHub Actions** — including AWS-hosted runner support
+- **Jira** and **Confluence** for tracking, collaboration, and documentation
+- Technical documentation and release-readiness support
 
-- Academic foundation in AI and machine learning
-- Computer-vision project experience (see FaceMask Vision Classifier)
+---
 
-## Areas of professional interest
+## AI, Data & Retrieval
 
-Key'Shawn is interested in:
+- Embeddings, semantic search, and grounded chat response patterns
+- Document chunking and vector retrieval (pgvector, Supabase PostgreSQL)
+- OpenAI API integration for embeddings and chat
+- Evaluation-driven assistant development
+- Academic foundation in artificial intelligence and machine learning
+- Computer-vision project experience (Face Mask Detection)
 
-- AI platforms and AI adoption
-- Developer tooling and internal automation
-- Backend systems and data workflows
-- Full-stack product engineering
-- CI/CD-adjacent engineering work
-- Developer-platform style roles
+---
 
-## Skills not claimed here
+## Security & Systems
 
-This knowledge base does not claim production expertise in Kubernetes operations, Terraform, Ansible, SAP, ServiceNow, formal people management, or production MLOps unless explicitly documented elsewhere in approved source material.
+- **M.S. Cybersecurity** graduate training (Kennesaw State University)
+- Secure software practices and requirements-driven engineering
+- **IBM DOORS** and **DXL** for requirements and traceability workflows
+- Privacy guardrails in AI assistant design
+
+---
+
+## Frontend & Mobile
+
+- **TypeScript**
+- **Next.js** and **React** for web interfaces
+- **React Native** and **Expo** for mobile development
+- **Supabase / PostgreSQL** in personal projects

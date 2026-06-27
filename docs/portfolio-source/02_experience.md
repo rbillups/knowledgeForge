@@ -2,39 +2,55 @@
 
 **Category:** Professional experience
 
-## Current role
+Experience is listed in reverse chronological order. Employer details stay at a public-safe, high level and exclude proprietary program names, customer identities, classified material, and confidential workflow specifics.
 
-**Software Engineer — Lockheed Martin (current)**
+---
 
-Key'Shawn Billups works as a Software Engineer at Lockheed Martin. This section describes his work at a public-safe, high level only.
+## Software Engineer — Lockheed Martin Aeronautics
 
-### Public-safe scope of work
+**Location:** Atlanta area, Georgia  
+**Dates:** June 2023 – Present
 
-- Develops and maintains **Python-based internal automation and engineering tools**
-- Works with **structured-data workflows** and **object-oriented maintenance**
-- Uses **PyTest-based validation** to support reliable software changes
-- Works in **Dockerized development environments**
-- Supports **GitLab CI/CD** workflows
-- Contributes to **SQL and database-backed workflows**
-- Performs **troubleshooting**, writes **technical documentation**, and supports **requirements-driven development**
-- Supports **release-readiness** activities
-- Leads **Functional Qualification Testing support** for an internal document-automation capability (described only at a general level here)
-- Uses **Jira** and **Confluence** for day-to-day work tracking, collaboration, and documentation
-- Has supported **AWS-hosted GitHub Actions runners**
+Builds and supports backend systems, Python automation, and internal engineering tools in a quality-focused, requirements-driven environment.
 
-### Important boundaries for this knowledge base
+- Develop and maintain **Python-based automation and internal engineering tools** for structured-data and object-oriented workflows
+- Support **database-backed workflows**, SQL-related tasks, and reliable software changes validated with **PyTest**
+- Work in **Dockerized development environments** and support **GitLab CI/CD** pipelines
+- Contribute to **release-readiness**, troubleshooting, and **technical documentation**
+- Support **Functional Qualification Testing** activities for internal document-automation capabilities
+- Use **IBM DOORS** and **DXL** in requirements-driven engineering workflows
+- Collaborate through **Jira** and **Confluence**; have supported **AWS-hosted GitHub Actions runners**
 
-The following are **not** claimed in this public portfolio material:
+---
 
-- Ownership of enterprise REST APIs
-- Kubernetes operations
-- Terraform or Ansible
-- SAP or ServiceNow administration
-- Production MLOps ownership
-- Formal people management
+## Application Support / Developer Intern — Wilcom Electrical Systems
 
-This knowledge base also **does not** include proprietary tool names, program names, customer identities, internal artifact details, source code, or confidential workflows related to Lockheed Martin work.
+**Location:** Marietta, Georgia  
+**Dates:** May 2021 – August 2021
 
-## How to interpret experience questions
+Supported internal applications and contributed to small development and documentation tasks during a summer internship.
 
-When answering questions about current employment, responses should stay at the level of general engineering responsibilities listed above and should not infer additional tools, metrics, certifications, or accomplishments beyond what is documented here.
+- Assisted with **application support**, issue triage, and user-facing troubleshooting
+- Helped maintain and improve internal tools through **basic development and scripting** work
+- Documented workflows, fixes, and setup steps for team reuse
+- Coordinated with technical staff to resolve software-related requests
+
+---
+
+## Software Analyst Intern — Carter Brothers
+
+**Location:** Kennesaw, Georgia  
+**Dates:** May 2022 – August 2022
+
+Supported software analysis, testing, and documentation work during a summer internship.
+
+- Analyzed software-related requests and helped translate business needs into actionable tasks
+- Supported **testing**, validation, and quality checks on internal software workflows
+- Prepared documentation and status updates for technical and operational stakeholders
+- Assisted with data review and reporting tasks tied to software operations
+
+---
+
+## Public boundaries
+
+This material does **not** claim production ownership of enterprise REST APIs, Kubernetes operations, Terraform, Ansible, SAP, ServiceNow, formal people management, or production MLOps unless explicitly documented elsewhere in approved source material.

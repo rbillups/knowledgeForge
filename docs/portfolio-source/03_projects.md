@@ -2,90 +2,107 @@
 
 **Category:** Personal and academic projects
 
-This section lists projects Key'Shawn Billups has built or is planning. Each entry is labeled by status so readers can distinguish completed work from planned work.
+Selected projects that demonstrate backend systems, AI-enabled product work, mobile development, and applied machine learning.
 
 ---
 
 ## KnowledgeForge
 
-**Status:** Active personal project
+**Status:** Active personal project  
+**Live demo:** Public portfolio assistant on [rkbillups.com](https://rkbillups.com)
 
-Citation-grounded AI knowledge assistant platform.
+### Overview
 
-### Stack and capabilities
+Citation-grounded AI knowledge assistant for answering questions from approved source documents with supporting excerpts.
 
-- **Frontend:** Next.js, TypeScript
-- **Backend:** Python, FastAPI
-- **Database:** Supabase Postgres with pgvector
-- **AI:** OpenAI embeddings and grounded chat responses
-- **Engineering practices:** PyTest, GitHub Actions, Docker planning
+### Problem addressed
 
-### What it does
+Portfolio and document Q&A needs trustworthy answers tied to source material—not generic model responses without traceability.
 
-KnowledgeForge supports document upload, text extraction, chunking, embeddings, semantic search, grounded answers, and source citations.
+### Technical approach
+
+- Document ingestion and text extraction
+- Chunking and embedding generation
+- Semantic retrieval with vector search
+- Grounded answer generation with source citations
+- Privacy guardrails, evaluation coverage, and a restricted public API surface for portfolio use
+
+### Key capabilities
+
+- Upload and index Markdown and other supported documents
+- Semantic search over embedded chunks
+- Grounded chat responses with citation metadata
+- Public portfolio assistant endpoint for [rkbillups.com](https://rkbillups.com)
+- Rate limiting and public-mode API lockdown for production deployment
+
+### Stack
+
+Next.js, TypeScript, Python, FastAPI, Supabase PostgreSQL with pgvector, OpenAI embeddings, Railway, Vercel
+
+### Notes
+
+KnowledgeForge is an active personal project and portfolio demonstration—not an enterprise SaaS product or multi-tenant production platform.
 
 ---
 
 ## NextUp
 
-**Status:** Personal project
+**Status:** Personal project (in development)
 
-Location-based React Native app for discovering nearby basketball courts, organizing pickup games, and coordinating attendance.
+### Overview
+
+Mobile app for pickup basketball coordination—finding courts, organizing runs, and coordinating attendance.
+
+### Problem addressed
+
+Pickup games are hard to organize without a shared view of nearby courts, active runs, and who is coming.
+
+### Technical approach
+
+- Location-aware court discovery
+- Run creation and RSVP coordination
+- Mobile-first social coordination flows backed by a managed database
+
+### Key capabilities
+
+- Discover nearby basketball courts
+- Create and join pickup runs
+- RSVP and coordinate attendance with other players
 
 ### Stack
 
-- TypeScript
-- Expo / React Native
-- Supabase
-- PostgreSQL
+React Native, Expo, TypeScript, Supabase, PostgreSQL
 
 ---
 
-## Discord Community Engagement Bot
-
-**Status:** Personal project
-
-Python automation bot built with discord.py.
-
-### Highlights
-
-- Scheduled content delivery
-- JSON and environment-based configuration
-- Deployment experience
-
----
-
-## FaceMask Vision Classifier
+## Face Mask Detection
 
 **Status:** Academic / personal computer-vision project
 
-Deep-learning and computer-vision project using Python.
+### Overview
 
-### Timeline
+Computer-vision classifier project using Python and convolutional neural network (CNN) techniques.
 
-- Originally developed in **2022**
-- Modernized in **2026**
+### Problem addressed
 
-No new benchmark results are documented in this knowledge base unless explicitly added to source material later.
+Binary image classification to detect whether a face mask is present in an image.
 
----
+### Technical approach
 
-## ReleaseGate
+- Python-based machine learning pipeline
+- CNN model training and inference for image classification
+- Dataset preparation, model evaluation, and iterative refinement
 
-**Status:** Planned / upcoming — **not yet built**
+### Key capabilities
 
-ReleaseGate is a **proposed future project**. It should be described as planned work, not a completed product.
+- Image preprocessing and model inference workflow
+- CNN-based classification for face mask detection
+- Project originally developed in **2022** and modernized in **2026**
 
-Do not present ReleaseGate as shipped, deployed, or actively in production.
+### Stack
 
----
+Python, CNN / machine learning, computer vision
 
-## Project category guide
+### Notes
 
-| Project | Category |
-|---------|----------|
-| KnowledgeForge | Personal project |
-| NextUp | Personal project |
-| Discord Community Engagement Bot | Personal project |
-| FaceMask Vision Classifier | Academic / personal project |
-| ReleaseGate | Planned future project |
+No benchmark results or production deployment claims are documented in this portfolio material.
