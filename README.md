@@ -15,6 +15,7 @@ Public-safe portfolio Markdown files live in `docs/portfolio-source/`.
 ```bash
 cd apps/api
 source .venv/bin/activate
+pip install -r requirements-dev.txt
 python -m app.scripts.import_portfolio --dry-run
 python -m app.scripts.import_portfolio
 ```
@@ -185,6 +186,74 @@ Before deploying the portfolio assistant publicly:
 7. Confirm privacy guardrails pass in the evaluation suite
 8. Set frontend `NEXT_PUBLIC_API_URL` to the public API URL
 9. Keep secrets out of frontend code, logs, and git
+
+## Preview Deployment
+
+Use this flow for Railway (backend preview) and Vercel (frontend preview). Deploy **backend first**, then **frontend**.
+
+### Railway backend (`apps/api`)
+
+| Setting | Value |
+| --- | --- |
+| **Root directory** | `apps/api` |
+| **Start command** | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| **Health check path** | `/api/v1/health/ready` |
+
+Railway reads `apps/api/railway.toml` when the service root is `apps/api`. The start command does **not** use `--reload`. Railway injects `PORT` at runtime.
+
+**Backend environment variables (names only — set values in the Railway dashboard):**
+
+- `APP_ENV`
+- `STORAGE_PROVIDER`
+- `DATABASE_URL`
+- `OPENAI_API_KEY`
+- `EMBEDDING_MODEL`
+- `CHAT_MODEL`
+- `CORS_ALLOWED_ORIGINS`
+- `PUBLIC_PORTFOLIO_MODE`
+- `CHAT_RATE_LIMIT_MAX_REQUESTS`
+- `CHAT_RATE_LIMIT_WINDOW_SECONDS`
+- `SUPABASE_URL` (when using Supabase Storage)
+- `SUPABASE_SERVICE_ROLE_KEY` (when using Supabase Storage)
+- `SUPABASE_STORAGE_BUCKET` (when using Supabase Storage)
+
+For the public portfolio preview, set `PUBLIC_PORTFOLIO_MODE=true`.
+
+**Readiness verification (after deploy):**
+
+```text
+GET https://<your-railway-service>/api/v1/health/ready
+```
+
+Expect HTTP `200` with `"ready": true` when the database and storage checks pass.
+
+### Vercel frontend (`apps/web`)
+
+| Setting | Value |
+| --- | --- |
+| **Root directory** | `apps/web` |
+| **Framework preset** | Next.js (auto-detected) |
+| **Build command** | `npm run build` (default) |
+| **Output** | Next.js default |
+
+**Frontend environment variables (names only — set values in the Vercel dashboard):**
+
+- `NEXT_PUBLIC_API_URL`
+- `NEXT_PUBLIC_PUBLIC_PORTFOLIO_MODE`
+
+For the public portfolio preview, set `NEXT_PUBLIC_PUBLIC_PORTFOLIO_MODE=true`. Point `NEXT_PUBLIC_API_URL` at your Railway backend URL (no trailing slash).
+
+The frontend uses only `NEXT_PUBLIC_*` variables in client code. Do not add server secrets to Vercel public env vars.
+
+### Admin workspace warning
+
+The full KnowledgeForge admin workspace (`/chat`, `/documents`, `/dashboard`) must remain **local only** until Phase C authentication exists. Frontend route hiding and `PUBLIC_PORTFOLIO_MODE` are launch boundaries, not a substitute for private admin deployment with auth.
+
+Local backend tests still install dev dependencies with:
+
+```bash
+pip install -r requirements-dev.txt
+```
 
 ## Planned Stack
 

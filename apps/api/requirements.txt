@@ -7,5 +7,4 @@ python-dotenv
 python-multipart
 pypdf
 openai
-pytest
 httpx
