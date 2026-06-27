@@ -16,6 +16,7 @@ from app.api.routes import (
     search,
 )
 from app.config.settings import settings
+from app.services.storage.factory import get_storage_backend
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,8 +28,18 @@ logger = logging.getLogger(__name__)
 def create_app() -> FastAPI:
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-        settings.upload_dir.mkdir(parents=True, exist_ok=True)
-        logger.info("Upload directory ready at %s", settings.upload_dir)
+        if settings.storage_provider == "local":
+            settings.upload_dir.mkdir(parents=True, exist_ok=True)
+            logger.info("Local upload directory ready")
+        else:
+            logger.info("Using Supabase Storage provider")
+
+        storage = get_storage_backend()
+        if storage.check_availability():
+            logger.info("Storage availability check passed")
+        else:
+            logger.warning("Storage availability check failed during startup")
+
         yield
 
     app = FastAPI(
@@ -73,9 +84,7 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",
-        ],
+        allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -93,6 +102,7 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(health.router)
+    app.include_router(health.v1_router, prefix="/api/v1")
     app.include_router(collections.router, prefix="/api/v1")
     app.include_router(dashboard.router, prefix="/api/v1")
     app.include_router(documents.router, prefix="/api/v1")

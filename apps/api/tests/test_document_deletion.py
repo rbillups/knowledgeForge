@@ -9,6 +9,7 @@ from app.models.document_chunk import DocumentChunk
 from app.schemas.document import DocumentDeleteResponse
 from app.services.document_service import delete_document
 from app.services.exceptions import DocumentDeletionError, DocumentNotFoundError
+from app.services.storage.local_storage import LocalStorageBackend
 
 
 def _make_document(
@@ -41,17 +42,16 @@ def _make_document(
     return document
 
 
-@patch("app.services.document_service.settings")
+@patch("app.services.document_service.get_storage_backend")
 def test_delete_document_success(
-    mock_settings: MagicMock,
+    mock_get_storage_backend: MagicMock,
     tmp_path: Path,
 ) -> None:
-    mock_settings.upload_dir = tmp_path
+    storage = LocalStorageBackend(upload_dir=tmp_path)
+    mock_get_storage_backend.return_value = storage
+
     document = _make_document(document_id=5, filename="test-notes.md")
-    upload_dir = tmp_path / "5"
-    upload_dir.mkdir(parents=True)
-    upload_file = upload_dir / "test-notes.md"
-    upload_file.write_text("# Test notes", encoding="utf-8")
+    storage.save("5/test-notes.md", b"# Test notes", content_type="text/markdown")
 
     db = MagicMock()
     db.get.return_value = document
@@ -65,8 +65,7 @@ def test_delete_document_success(
     )
     db.delete.assert_called_once_with(document)
     db.commit.assert_called_once()
-    assert not upload_file.exists()
-    assert not upload_dir.exists()
+    assert storage.exists("5/test-notes.md") is False
 
 
 def test_delete_document_raises_for_missing_document() -> None:
@@ -80,12 +79,12 @@ def test_delete_document_raises_for_missing_document() -> None:
     db.commit.assert_not_called()
 
 
-@patch("app.services.document_service.settings")
+@patch("app.services.document_service.get_storage_backend")
 def test_delete_document_removes_associated_chunks_via_orm_delete(
-    mock_settings: MagicMock,
+    mock_get_storage_backend: MagicMock,
     tmp_path: Path,
 ) -> None:
-    mock_settings.upload_dir = tmp_path
+    mock_get_storage_backend.return_value = LocalStorageBackend(upload_dir=tmp_path)
     document = _make_document(document_id=7)
     db = MagicMock()
     db.get.return_value = document
@@ -97,12 +96,12 @@ def test_delete_document_removes_associated_chunks_via_orm_delete(
     assert len(deleted_document.chunks) == 2
 
 
-@patch("app.services.document_service.settings")
+@patch("app.services.document_service.get_storage_backend")
 def test_delete_document_does_not_affect_unrelated_documents(
-    mock_settings: MagicMock,
+    mock_get_storage_backend: MagicMock,
     tmp_path: Path,
 ) -> None:
-    mock_settings.upload_dir = tmp_path
+    mock_get_storage_backend.return_value = LocalStorageBackend(upload_dir=tmp_path)
     target = _make_document(document_id=10, filename="remove-me.md")
     db = MagicMock()
     db.get.return_value = target

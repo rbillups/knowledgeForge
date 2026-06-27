@@ -4,7 +4,6 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config.settings import settings
 from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
 from app.models.knowledge_collection import KnowledgeCollection
@@ -26,6 +25,11 @@ from app.services.exceptions import (
     UnsupportedFileTypeError,
 )
 from app.services.text_extraction import extract_text
+from app.services.storage import (
+    build_document_storage_key,
+    content_type_for_file_type,
+    get_storage_backend,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -140,8 +144,8 @@ def import_markdown_file(
         ).delete()
         db.commit()
 
-        upload_path = _save_upload_file(document.id, filename, file_bytes)
-        _index_document_from_path(db, document, upload_path, file_type)
+        upload_key = _save_upload_file(document.id, filename, file_bytes, file_type)
+        _index_document(db, document, upload_key, file_type)
         return document, "updated", document.chunk_count
 
     document = Document(
@@ -156,10 +160,10 @@ def import_markdown_file(
     db.commit()
     db.refresh(document)
 
-    upload_path = _save_upload_file(document.id, filename, file_bytes)
+    upload_key = _save_upload_file(document.id, filename, file_bytes, file_type)
 
     try:
-        _index_document_from_path(db, document, upload_path, file_type)
+        _index_document(db, document, upload_key, file_type)
         return document, "created", document.chunk_count
     except DocumentProcessingError as exc:
         _mark_document_failed(db, document, exc.message)
@@ -210,10 +214,10 @@ def upload_document(
     db.commit()
     db.refresh(document)
 
-    upload_path = _save_upload_file(document.id, filename, file_bytes)
+    upload_key = _save_upload_file(document.id, filename, file_bytes, file_type)
 
     try:
-        _index_document_from_path(db, document, upload_path, file_type)
+        _index_document(db, document, upload_key, file_type)
         return DocumentUploadResponse(
             id=document.id,
             filename=document.filename,
@@ -254,8 +258,9 @@ def reindex_document(db: Session, document_id: int) -> DocumentReindexResponse:
     if document is None:
         raise DocumentNotFoundError(document_id)
 
-    upload_path = _find_uploaded_file(document.id, document.filename)
-    if upload_path is None:
+    storage_key = build_document_storage_key(document.id, document.filename)
+    storage = get_storage_backend()
+    if not storage.exists(storage_key):
         raise DocumentProcessingError(
             "The original uploaded file could not be found for reindexing."
         )
@@ -270,10 +275,10 @@ def reindex_document(db: Session, document_id: int) -> DocumentReindexResponse:
         ).delete()
         db.commit()
 
-        _index_document_from_path(
+        _index_document(
             db,
             document,
-            upload_path,
+            storage_key,
             document.file_type,
         )
 
@@ -316,7 +321,7 @@ def delete_document(db: Session, document_id: int) -> DocumentDeleteResponse:
         raise DocumentNotFoundError(document_id)
 
     filename = document.filename
-    upload_path = _find_uploaded_file(document.id, document.filename)
+    storage_key = build_document_storage_key(document.id, document.filename)
 
     try:
         # document_chunks rows cascade via FK on delete; ORM relationship also
@@ -328,8 +333,9 @@ def delete_document(db: Session, document_id: int) -> DocumentDeleteResponse:
         logger.exception("Failed to delete document %s", document_id)
         raise DocumentDeletionError(document_id) from None
 
-    if upload_path is not None:
-        _remove_upload_file(upload_path, document_id=document_id)
+    storage = get_storage_backend()
+    if storage.exists(storage_key):
+        storage.delete(storage_key)
 
     logger.info("Deleted document %s", document_id)
 
@@ -340,13 +346,16 @@ def delete_document(db: Session, document_id: int) -> DocumentDeleteResponse:
     )
 
 
-def _index_document_from_path(
+def _index_document(
     db: Session,
     document: Document,
-    upload_path: Path,
+    storage_key: str,
     file_type: str,
 ) -> None:
-    text, page_count = extract_text(upload_path, file_type)
+    storage = get_storage_backend()
+    with storage.materialize(storage_key) as file_path:
+        text, page_count = extract_text(file_path, file_type)
+
     chunks = chunk_text(text)
     if not chunks:
         raise DocumentProcessingError(
@@ -386,41 +395,20 @@ def _index_document_from_path(
     )
 
 
-def _save_upload_file(document_id: int, filename: str, file_bytes: bytes) -> Path:
-    document_dir = settings.upload_dir / str(document_id)
-    document_dir.mkdir(parents=True, exist_ok=True)
-    destination = document_dir / Path(filename).name
-    destination.write_bytes(file_bytes)
-    return destination
-
-
-def _find_uploaded_file(document_id: int, filename: str) -> Path | None:
-    destination = settings.upload_dir / str(document_id) / Path(filename).name
-    if destination.exists():
-        return destination
-    return None
-
-
-def _remove_upload_file(upload_path: Path, *, document_id: int) -> None:
-    expected_parent = (settings.upload_dir / str(document_id)).resolve()
-    resolved_path = upload_path.resolve()
-
-    if expected_parent not in resolved_path.parents:
-        logger.warning(
-            "Skipped removing upload file outside document directory for %s",
-            document_id,
-        )
-        return
-
-    try:
-        resolved_path.unlink(missing_ok=True)
-        if expected_parent.exists() and not any(expected_parent.iterdir()):
-            expected_parent.rmdir()
-    except OSError:
-        logger.warning(
-            "Could not remove upload file for document %s",
-            document_id,
-        )
+def _save_upload_file(
+    document_id: int,
+    filename: str,
+    file_bytes: bytes,
+    file_type: str,
+) -> str:
+    storage = get_storage_backend()
+    storage_key = build_document_storage_key(document_id, filename)
+    storage.save(
+        storage_key,
+        file_bytes,
+        content_type=content_type_for_file_type(file_type),
+    )
+    return storage_key
 
 
 def _mark_document_failed(db: Session, document: Document, message: str) -> None:

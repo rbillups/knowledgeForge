@@ -12,6 +12,7 @@ from app.services.exceptions import (
     EmbeddingGenerationError,
     MissingApiKeyError,
 )
+from app.services.rate_limit_service import enforce_chat_rate_limit
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 def chat_endpoint(
     request: ChatRequest,
     db: Session = Depends(get_db),
+    _: None = Depends(enforce_chat_rate_limit),
 ) -> ChatResponse:
     try:
         return grounded_chat(db, request)
