@@ -8,11 +8,19 @@ from app.config.settings import settings
 from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
 from app.models.knowledge_collection import KnowledgeCollection
-from app.schemas.document import DocumentResponse, DocumentUploadResponse
+from app.schemas.document import (
+    DocumentReindexResponse,
+    DocumentResponse,
+    DocumentUploadResponse,
+)
+from app.services.chunk_embedding_service import apply_embeddings_to_chunks
 from app.services.chunking import chunk_text, estimate_tokens
 from app.services.exceptions import (
     CollectionNotFoundError,
+    DocumentNotFoundError,
     DocumentProcessingError,
+    EmbeddingGenerationError,
+    MissingApiKeyError,
     UnsupportedFileTypeError,
 )
 from app.services.text_extraction import extract_text
@@ -102,36 +110,7 @@ def upload_document(
     upload_path = _save_upload_file(document.id, filename, file_bytes)
 
     try:
-        text, page_count = extract_text(upload_path, file_type)
-        chunks = chunk_text(text)
-        if not chunks:
-            raise DocumentProcessingError(
-                "No readable text chunks could be created from the document."
-            )
-
-        for index, chunk in enumerate(chunks):
-            db.add(
-                DocumentChunk(
-                    document_id=document.id,
-                    chunk_index=index,
-                    content=chunk,
-                    token_estimate=estimate_tokens(chunk),
-                )
-            )
-
-        document.status = "indexed"
-        document.page_count = page_count
-        document.chunk_count = len(chunks)
-        document.error_message = None
-        db.commit()
-        db.refresh(document)
-
-        logger.info(
-            "Indexed document %s with %s chunks",
-            document.id,
-            document.chunk_count,
-        )
-
+        _index_document_from_path(db, document, upload_path, file_type)
         return DocumentUploadResponse(
             id=document.id,
             filename=document.filename,
@@ -145,6 +124,16 @@ def upload_document(
     except DocumentProcessingError as exc:
         _mark_document_failed(db, document, exc.message)
         raise
+    except MissingApiKeyError:
+        _mark_document_failed(
+            db,
+            document,
+            MissingApiKeyError.message,
+        )
+        raise
+    except EmbeddingGenerationError as exc:
+        _mark_document_failed(db, document, exc.message)
+        raise DocumentProcessingError(exc.message) from exc
     except Exception:
         logger.exception("Unexpected failure while processing document %s", document.id)
         _mark_document_failed(
@@ -157,12 +146,126 @@ def upload_document(
         ) from None
 
 
+def reindex_document(db: Session, document_id: int) -> DocumentReindexResponse:
+    document = db.get(Document, document_id)
+    if document is None:
+        raise DocumentNotFoundError(document_id)
+
+    upload_path = _find_uploaded_file(document.id, document.filename)
+    if upload_path is None:
+        raise DocumentProcessingError(
+            "The original uploaded file could not be found for reindexing."
+        )
+
+    document.status = "processing"
+    document.error_message = None
+    db.commit()
+
+    try:
+        db.query(DocumentChunk).filter(
+            DocumentChunk.document_id == document.id
+        ).delete()
+        db.commit()
+
+        _index_document_from_path(
+            db,
+            document,
+            upload_path,
+            document.file_type,
+        )
+
+        return DocumentReindexResponse(
+            id=document.id,
+            filename=document.filename,
+            title=document.title,
+            status=document.status,
+            chunk_count=document.chunk_count,
+            message="Document reindexed successfully.",
+        )
+    except DocumentProcessingError as exc:
+        _mark_document_failed(db, document, exc.message)
+        raise
+    except MissingApiKeyError:
+        _mark_document_failed(
+            db,
+            document,
+            MissingApiKeyError.message,
+        )
+        raise
+    except EmbeddingGenerationError as exc:
+        _mark_document_failed(db, document, exc.message)
+        raise DocumentProcessingError(exc.message) from exc
+    except Exception:
+        logger.exception("Unexpected failure while reindexing document %s", document.id)
+        _mark_document_failed(
+            db,
+            document,
+            "An unexpected error occurred while reindexing the document.",
+        )
+        raise DocumentProcessingError(
+            "An unexpected error occurred while reindexing the document."
+        ) from None
+
+
+def _index_document_from_path(
+    db: Session,
+    document: Document,
+    upload_path: Path,
+    file_type: str,
+) -> None:
+    text, page_count = extract_text(upload_path, file_type)
+    chunks = chunk_text(text)
+    if not chunks:
+        raise DocumentProcessingError(
+            "No readable text chunks could be created from the document."
+        )
+
+    chunk_rows: list[DocumentChunk] = []
+    for index, content in enumerate(chunks):
+        chunk = DocumentChunk(
+            document_id=document.id,
+            chunk_index=index,
+            content=content,
+            token_estimate=estimate_tokens(content),
+        )
+        db.add(chunk)
+        chunk_rows.append(chunk)
+
+    db.flush()
+
+    apply_embeddings_to_chunks(
+        db,
+        chunk_ids=[chunk.id for chunk in chunk_rows],
+        chunk_texts=[chunk.content for chunk in chunk_rows],
+    )
+
+    document.status = "indexed"
+    document.page_count = page_count
+    document.chunk_count = len(chunks)
+    document.error_message = None
+    db.commit()
+    db.refresh(document)
+
+    logger.info(
+        "Indexed document %s with %s embedded chunks",
+        document.id,
+        document.chunk_count,
+    )
+
+
 def _save_upload_file(document_id: int, filename: str, file_bytes: bytes) -> Path:
     document_dir = settings.upload_dir / str(document_id)
     document_dir.mkdir(parents=True, exist_ok=True)
     destination = document_dir / Path(filename).name
     destination.write_bytes(file_bytes)
     return destination
+
+
+def _find_uploaded_file(document_id: int, filename: str) -> Path | None:
+    destination = settings.upload_dir / str(document_id) / Path(filename).name
+    if destination.exists():
+        return destination
+    return None
 
 
 def _mark_document_failed(db: Session, document: Document, message: str) -> None:

@@ -8,6 +8,8 @@ API_ROOT = Path(__file__).resolve().parents[2]
 
 class Settings(BaseSettings):
     database_url: str
+    openai_api_key: str | None = None
+    embedding_model: str = "text-embedding-3-small"
     upload_dir: Path = API_ROOT / "uploads"
 
     model_config = SettingsConfigDict(

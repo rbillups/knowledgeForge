@@ -32,3 +32,14 @@ class DocumentUploadResponse(BaseModel):
     message: str = Field(
         examples=["Document uploaded and indexed successfully."],
     )
+
+
+class DocumentReindexResponse(BaseModel):
+    id: int
+    filename: str
+    title: str
+    status: str
+    chunk_count: int
+    message: str = Field(
+        examples=["Document reindexed successfully."],
+    )
