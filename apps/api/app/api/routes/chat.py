@@ -24,7 +24,8 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
     summary="Ask a grounded question",
     description=(
         "Retrieve the most relevant chunks from the selected collection and "
-        "generate a concise answer grounded only in those sources."
+        "generate a concise answer grounded only in those sources. "
+        "Privacy-sensitive requests are blocked before retrieval."
     ),
 )
 def chat_endpoint(

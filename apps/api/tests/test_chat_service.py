@@ -46,6 +46,7 @@ def test_chat_returns_grounded_answer_with_citations(
     assert response.status_code == 200
     payload = response.json()
     assert payload["insufficient_context"] is False
+    assert payload["policy_blocked"] is False
     assert payload["answer"] == (
         "Production credentials must be rotated every 90 days."
     )

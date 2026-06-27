@@ -9,6 +9,9 @@ export const SUGGESTED_PROMPTS = [
 export const INSUFFICIENT_CONTEXT_NOTE =
   "This answer is limited to the documents currently indexed in this collection.";
 
+export const POLICY_BLOCKED_NOTE =
+  "This request was limited to protect personal privacy.";
+
 export function formatChatTimestamp(date: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-US", {
     hour: "numeric",

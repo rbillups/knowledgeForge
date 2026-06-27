@@ -110,6 +110,7 @@ export function ChatInterface() {
         timestamp: formatChatTimestamp(),
         citations: response.citations,
         insufficientContext: response.insufficient_context,
+        policyBlocked: response.policy_blocked,
       };
 
       setMessages((current) => [

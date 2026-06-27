@@ -21,6 +21,22 @@ python -m app.scripts.import_portfolio
 
 See [docs/portfolio-source/README.md](docs/portfolio-source/README.md) for details.
 
+## Evaluate the Portfolio Knowledge Base
+
+Grounded AI systems should be tested against a fixed evaluation dataset before public deployment. The portfolio evaluation suite calls the same `grounded_chat()` service used by `POST /api/v1/chat`, then checks whether supported questions cite the expected source documents and whether unsupported questions safely refuse to answer.
+
+Evaluation dataset: `docs/evals/portfolio_eval_cases.json`
+
+```bash
+cd apps/api
+source .venv/bin/activate
+python -m app.scripts.run_portfolio_eval
+python -m app.scripts.run_portfolio_eval --verbose
+python -m app.scripts.run_portfolio_eval --fail-on-error
+```
+
+Results are written to `reports/portfolio-eval-results.json`.
+
 ## Planned Stack
 
 - Frontend: Next.js, TypeScript, Tailwind CSS

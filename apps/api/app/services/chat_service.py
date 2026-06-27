@@ -7,6 +7,10 @@ from app.config.settings import settings
 from app.schemas.chat import ChatCitation, ChatRequest, ChatResponse
 from app.schemas.search import SearchRequest, SearchResultItem
 from app.services.exceptions import ChatGenerationError, MissingApiKeyError
+from app.services.privacy_policy_service import (
+    PRIVACY_BLOCKED_ANSWER,
+    is_privacy_sensitive_question,
+)
 from app.services.search_service import semantic_search
 
 logger = logging.getLogger(__name__)
@@ -25,6 +29,19 @@ Keep responses concise and professional."""
 
 
 def grounded_chat(db: Session, request: ChatRequest) -> ChatResponse:
+    if is_privacy_sensitive_question(request.question):
+        logger.info(
+            "Blocked privacy-sensitive chat request for collection %s",
+            request.collection_id,
+        )
+        return ChatResponse(
+            answer=PRIVACY_BLOCKED_ANSWER,
+            citations=[],
+            insufficient_context=True,
+            policy_blocked=True,
+            model=None,
+        )
+
     search_response = semantic_search(
         db,
         SearchRequest(
@@ -45,6 +62,7 @@ def grounded_chat(db: Session, request: ChatRequest) -> ChatResponse:
             answer=INSUFFICIENT_ANSWER,
             citations=[],
             insufficient_context=True,
+            policy_blocked=False,
             model=settings.chat_model,
         )
 
@@ -67,6 +85,7 @@ def grounded_chat(db: Session, request: ChatRequest) -> ChatResponse:
         answer=answer,
         citations=citations,
         insufficient_context=insufficient_context,
+        policy_blocked=False,
         model=settings.chat_model,
     )
 

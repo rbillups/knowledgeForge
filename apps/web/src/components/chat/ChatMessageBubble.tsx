@@ -1,5 +1,5 @@
 import { CitationCard } from "@/components/chat/CitationCard";
-import { INSUFFICIENT_CONTEXT_NOTE } from "@/lib/chat";
+import { INSUFFICIENT_CONTEXT_NOTE, POLICY_BLOCKED_NOTE } from "@/lib/chat";
 import type { ChatMessage } from "@/types/chat";
 
 type ChatMessageBubbleProps = {
@@ -46,11 +46,17 @@ export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
           )}
         </div>
 
-        {message.insufficientContext && !message.isError && (
+        {message.policyBlocked && !message.isError && (
+          <p className="px-1 text-xs text-slate-500">{POLICY_BLOCKED_NOTE}</p>
+        )}
+
+        {message.insufficientContext && !message.isError && !message.policyBlocked && (
           <p className="px-1 text-xs text-slate-500">{INSUFFICIENT_CONTEXT_NOTE}</p>
         )}
 
-        {message.citations && message.citations.length > 0 && (
+        {message.citations &&
+          message.citations.length > 0 &&
+          !message.policyBlocked && (
           <div className="w-full space-y-2 pt-1">
             <p className="px-1 text-xs font-medium uppercase tracking-wide text-slate-400">
               Sources

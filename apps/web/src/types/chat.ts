@@ -11,7 +11,8 @@ export type ChatResponse = {
   answer: string;
   citations: ChatCitation[];
   insufficient_context: boolean;
-  model: string;
+  policy_blocked: boolean;
+  model: string | null;
 };
 
 export type ChatMessageRole = "user" | "assistant" | "loading";
@@ -23,5 +24,6 @@ export type ChatMessage = {
   timestamp: string;
   citations?: ChatCitation[];
   insufficientContext?: boolean;
+  policyBlocked?: boolean;
   isError?: boolean;
 };

@@ -42,4 +42,14 @@ class ChatResponse(BaseModel):
             "supporting information to answer the question."
         ),
     )
-    model: str = Field(description="Chat model used to generate the answer.")
+    policy_blocked: bool = Field(
+        default=False,
+        description=(
+            "True when the request was blocked by a privacy or safety policy "
+            "before retrieval or model generation."
+        ),
+    )
+    model: str | None = Field(
+        default=None,
+        description="Chat model used to generate the answer, if applicable.",
+    )

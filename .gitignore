@@ -22,3 +22,4 @@ out/
 
 apps/api/.env
 apps/api/uploads/
+reports/portfolio-eval-results.json
