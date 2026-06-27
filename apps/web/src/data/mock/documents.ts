@@ -1,6 +1,14 @@
-import type { DocumentRecord } from "@/types/documents";
+type MockDocumentRecord = {
+  id: string;
+  name: string;
+  type: string;
+  size: string;
+  collection: string;
+  uploadedAt: string;
+  status: "indexed" | "processing" | "queued" | "failed";
+};
 
-export const mockDocuments: DocumentRecord[] = [
+export const mockDocuments: MockDocumentRecord[] = [
   {
     id: "doc-1",
     name: "Security Operations Manual.pdf",

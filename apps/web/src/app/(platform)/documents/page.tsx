@@ -1,5 +1,4 @@
-import { DocumentTable } from "@/components/documents/DocumentTable";
-import { mockDocuments } from "@/data/mock/documents";
+import { DocumentsManager } from "@/components/documents/DocumentsManager";
 
 export default function DocumentsPage() {
   return (
@@ -13,7 +12,7 @@ export default function DocumentsPage() {
         </p>
       </div>
 
-      <DocumentTable documents={mockDocuments} />
+      <DocumentsManager />
     </div>
   );
 }
