@@ -8,6 +8,19 @@ KnowledgeForge lets users upload documents, ask questions, and receive answers g
 
 The first deployment will support a public portfolio knowledge base containing professional background, projects, skills, and public documentation.
 
+## Seed the Portfolio Knowledge Base
+
+Public-safe portfolio Markdown files live in `docs/portfolio-source/`.
+
+```bash
+cd apps/api
+source .venv/bin/activate
+python -m app.scripts.import_portfolio --dry-run
+python -m app.scripts.import_portfolio
+```
+
+See [docs/portfolio-source/README.md](docs/portfolio-source/README.md) for details.
+
 ## Planned Stack
 
 - Frontend: Next.js, TypeScript, Tailwind CSS

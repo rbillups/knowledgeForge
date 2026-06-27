@@ -82,6 +82,107 @@ def resolve_file_type(filename: str) -> str:
     return file_type
 
 
+def get_collection_by_slug(db: Session, slug: str) -> KnowledgeCollection | None:
+    return db.scalar(
+        select(KnowledgeCollection).where(KnowledgeCollection.slug == slug)
+    )
+
+
+def find_document_in_collection(
+    db: Session,
+    *,
+    collection_id: int,
+    filename: str,
+    source_type: str | None = None,
+) -> Document | None:
+    stmt = select(Document).where(
+        Document.collection_id == collection_id,
+        Document.filename == filename,
+    )
+    if source_type is not None:
+        stmt = stmt.where(Document.source_type == source_type)
+
+    return db.scalar(stmt)
+
+
+def import_markdown_file(
+    db: Session,
+    *,
+    collection_id: int,
+    source_path: Path,
+    source_type: str = "portfolio",
+    title: str | None = None,
+) -> tuple[Document, str, int]:
+    filename = source_path.name
+    file_type = resolve_file_type(filename)
+    file_bytes = source_path.read_bytes()
+    document_title = title or Path(filename).stem
+
+    existing = find_document_in_collection(
+        db,
+        collection_id=collection_id,
+        filename=filename,
+        source_type=source_type,
+    )
+
+    if existing is not None:
+        document = existing
+        document.title = document_title
+        document.status = "processing"
+        document.error_message = None
+        db.commit()
+        db.refresh(document)
+
+        db.query(DocumentChunk).filter(
+            DocumentChunk.document_id == document.id
+        ).delete()
+        db.commit()
+
+        upload_path = _save_upload_file(document.id, filename, file_bytes)
+        _index_document_from_path(db, document, upload_path, file_type)
+        return document, "updated", document.chunk_count
+
+    document = Document(
+        collection_id=collection_id,
+        filename=filename,
+        title=document_title,
+        file_type=file_type,
+        source_type=source_type,
+        status="processing",
+    )
+    db.add(document)
+    db.commit()
+    db.refresh(document)
+
+    upload_path = _save_upload_file(document.id, filename, file_bytes)
+
+    try:
+        _index_document_from_path(db, document, upload_path, file_type)
+        return document, "created", document.chunk_count
+    except DocumentProcessingError as exc:
+        _mark_document_failed(db, document, exc.message)
+        raise
+    except MissingApiKeyError:
+        _mark_document_failed(db, document, MissingApiKeyError.message)
+        raise
+    except EmbeddingGenerationError as exc:
+        _mark_document_failed(db, document, exc.message)
+        raise DocumentProcessingError(exc.message) from exc
+    except Exception:
+        logger.exception(
+            "Unexpected failure while importing markdown file %s",
+            filename,
+        )
+        _mark_document_failed(
+            db,
+            document,
+            "An unexpected error occurred while processing the document.",
+        )
+        raise DocumentProcessingError(
+            "An unexpected error occurred while processing the document."
+        ) from None
+
+
 def upload_document(
     db: Session,
     *,
