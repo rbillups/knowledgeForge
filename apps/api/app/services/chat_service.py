@@ -7,6 +7,7 @@ from app.config.settings import settings
 from app.schemas.chat import ChatCitation, ChatRequest, ChatResponse
 from app.schemas.search import SearchRequest, SearchResultItem
 from app.services.exceptions import ChatGenerationError, MissingApiKeyError
+from app.services.public_portfolio_answer_style import ChatGenerationSettings
 from app.services.privacy_policy_service import (
     PRIVACY_BLOCKED_ANSWER,
     is_privacy_sensitive_question,
@@ -27,8 +28,19 @@ If the sources do not support an answer, respond exactly with:
 "I do not have enough information in this knowledge base to answer that."
 Keep responses concise and professional."""
 
+DEFAULT_CHAT_GENERATION_SETTINGS = ChatGenerationSettings(
+    system_instructions=SYSTEM_INSTRUCTIONS,
+    insufficient_answer=INSUFFICIENT_ANSWER,
+)
 
-def grounded_chat(db: Session, request: ChatRequest) -> ChatResponse:
+
+def grounded_chat(
+    db: Session,
+    request: ChatRequest,
+    *,
+    generation_settings: ChatGenerationSettings | None = None,
+) -> ChatResponse:
+    settings_profile = generation_settings or DEFAULT_CHAT_GENERATION_SETTINGS
     if is_privacy_sensitive_question(request.question):
         logger.info(
             "Blocked privacy-sensitive chat request for collection %s",
@@ -59,7 +71,7 @@ def grounded_chat(db: Session, request: ChatRequest) -> ChatResponse:
             request.collection_id,
         )
         return ChatResponse(
-            answer=INSUFFICIENT_ANSWER,
+            answer=settings_profile.insufficient_answer,
             citations=[],
             insufficient_context=True,
             policy_blocked=False,
@@ -69,8 +81,12 @@ def grounded_chat(db: Session, request: ChatRequest) -> ChatResponse:
     answer = generate_grounded_answer(
         question=request.question.strip(),
         context_chunks=search_response.results,
+        system_instructions=settings_profile.system_instructions,
     )
-    insufficient_context = _is_insufficient_answer(answer)
+    insufficient_context = _is_insufficient_answer(
+        answer,
+        settings_profile.insufficient_answer,
+    )
 
     logger.info(
         "Grounded chat completed for collection %s using %s chunk(s), "
@@ -94,10 +110,12 @@ def generate_grounded_answer(
     *,
     question: str,
     context_chunks: list[SearchResultItem],
+    system_instructions: str | None = None,
 ) -> str:
     if not settings.openai_api_key:
         raise MissingApiKeyError()
 
+    instructions = system_instructions or SYSTEM_INSTRUCTIONS
     context_block = _format_context(context_chunks)
     user_input = (
         f"Question:\n{question}\n\n"
@@ -108,7 +126,7 @@ def generate_grounded_answer(
         client = OpenAI(api_key=settings.openai_api_key)
         response = client.responses.create(
             model=settings.chat_model,
-            instructions=SYSTEM_INSTRUCTIONS,
+            instructions=instructions,
             input=user_input,
         )
     except MissingApiKeyError:
@@ -166,6 +184,6 @@ def _to_citation(item: SearchResultItem) -> ChatCitation:
     )
 
 
-def _is_insufficient_answer(answer: str) -> bool:
+def _is_insufficient_answer(answer: str, insufficient_answer: str) -> bool:
     normalized = answer.strip().lower()
-    return normalized == INSUFFICIENT_ANSWER.lower()
+    return normalized == insufficient_answer.lower()
