@@ -108,6 +108,7 @@ export function ChatInterface() {
         role: "assistant",
         content: response.answer,
         timestamp: formatChatTimestamp(),
+        question: trimmedQuestion,
         citations: response.citations,
         insufficientContext: response.insufficient_context,
         policyBlocked: response.policy_blocked,
@@ -150,6 +151,16 @@ export function ChatInterface() {
   const handleSuggestionClick = (prompt: string) => {
     setInputValue(prompt);
     void submitQuestion(prompt);
+  };
+
+  const handleFeedbackSubmitted = (messageId: string) => {
+    setMessages((current) =>
+      current.map((message) =>
+        message.id === messageId
+          ? { ...message, feedbackSubmitted: true }
+          : message,
+      ),
+    );
   };
 
   const selectedCollection = collections.find(
@@ -224,7 +235,12 @@ export function ChatInterface() {
         ) : (
           <div className="mx-auto max-w-3xl space-y-6">
             {messages.map((message) => (
-              <ChatMessageBubble key={message.id} message={message} />
+              <ChatMessageBubble
+                key={message.id}
+                message={message}
+                collectionId={selectedCollectionId}
+                onFeedbackSubmitted={handleFeedbackSubmitted}
+              />
             ))}
             <div ref={messagesEndRef} />
           </div>

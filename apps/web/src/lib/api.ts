@@ -6,6 +6,11 @@ import type {
   DocumentDeleteResponse,
   DocumentUploadResponse,
 } from "@/types/documents";
+import type {
+  FeedbackCreateRequest,
+  FeedbackCreateResponse,
+  FeedbackSummary,
+} from "@/types/feedback";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -152,6 +157,37 @@ export async function chatWithKnowledgeBase(
   return response.json() as Promise<ChatResponse>;
 }
 
+export async function submitFeedback(
+  payload: FeedbackCreateRequest,
+): Promise<FeedbackCreateResponse> {
+  const response = await fetch(`${getApiUrl()}/api/v1/feedback`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const detail = await readErrorMessage(response);
+    throw new FeedbackRequestError(response.status, detail);
+  }
+
+  return response.json() as Promise<FeedbackCreateResponse>;
+}
+
+export async function getFeedbackSummary(): Promise<FeedbackSummary> {
+  const response = await fetch(`${getApiUrl()}/api/v1/feedback/summary`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to load feedback summary.");
+  }
+
+  return response.json() as Promise<FeedbackSummary>;
+}
+
 export class UploadRequestError extends Error {
   status: number;
 
@@ -178,6 +214,16 @@ export class ChatRequestError extends Error {
   constructor(status: number, detail: string) {
     super(detail);
     this.name = "ChatRequestError";
+    this.status = status;
+  }
+}
+
+export class FeedbackRequestError extends Error {
+  status: number;
+
+  constructor(status: number, detail: string) {
+    super(detail);
+    this.name = "FeedbackRequestError";
     this.status = status;
   }
 }

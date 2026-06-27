@@ -1,14 +1,35 @@
+import { AnswerFeedbackControls } from "@/components/chat/AnswerFeedbackControls";
 import { CitationCard } from "@/components/chat/CitationCard";
 import { INSUFFICIENT_CONTEXT_NOTE, POLICY_BLOCKED_NOTE } from "@/lib/chat";
+import { FEEDBACK_SUCCESS_MESSAGE } from "@/lib/feedback";
 import type { ChatMessage } from "@/types/chat";
 
 type ChatMessageBubbleProps = {
   message: ChatMessage;
+  collectionId: number | null;
+  onFeedbackSubmitted: (messageId: string) => void;
 };
 
-export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
+function canCollectFeedback(message: ChatMessage): boolean {
+  return (
+    message.role === "assistant" &&
+    !message.isError &&
+    !message.policyBlocked &&
+    !message.insufficientContext &&
+    !message.feedbackSubmitted &&
+    Boolean(message.question)
+  );
+}
+
+export function ChatMessageBubble({
+  message,
+  collectionId,
+  onFeedbackSubmitted,
+}: ChatMessageBubbleProps) {
   const isUser = message.role === "user";
   const isLoading = message.role === "loading";
+  const showFeedback =
+    canCollectFeedback(message) && collectionId !== null && message.question;
 
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
@@ -69,6 +90,20 @@ export function ChatMessageBubble({ message }: ChatMessageBubbleProps) {
               />
             ))}
           </div>
+        )}
+
+        {showFeedback && (
+          <AnswerFeedbackControls
+            collectionId={collectionId}
+            question={message.question!}
+            answer={message.content}
+            citations={message.citations}
+            onSubmitted={() => onFeedbackSubmitted(message.id)}
+          />
+        )}
+
+        {message.feedbackSubmitted && (
+          <p className="px-1 text-xs text-slate-500">{FEEDBACK_SUCCESS_MESSAGE}</p>
         )}
       </div>
     </div>

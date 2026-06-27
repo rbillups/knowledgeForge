@@ -22,8 +22,10 @@ export type ChatMessage = {
   role: ChatMessageRole;
   content: string;
   timestamp: string;
+  question?: string;
   citations?: ChatCitation[];
   insufficientContext?: boolean;
   policyBlocked?: boolean;
   isError?: boolean;
+  feedbackSubmitted?: boolean;
 };

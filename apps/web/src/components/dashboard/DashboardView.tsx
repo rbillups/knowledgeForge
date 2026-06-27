@@ -3,11 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { ApiStatusCard } from "@/components/dashboard/ApiStatusCard";
+import { FeedbackSummaryCard } from "@/components/dashboard/FeedbackSummaryCard";
 import { PortfolioSummaryCard } from "@/components/dashboard/PortfolioSummaryCard";
 import { RecentDocuments } from "@/components/dashboard/RecentDocuments";
 import { StatCard } from "@/components/ui/StatCard";
-import { getDashboardSummary } from "@/lib/api";
+import { getDashboardSummary, getFeedbackSummary } from "@/lib/api";
 import type { DashboardSummary } from "@/types/dashboard";
+import type { FeedbackSummary } from "@/types/feedback";
 
 const PORTFOLIO_SLUG = "portfolio";
 
@@ -17,26 +19,45 @@ function formatCount(value: number): string {
 
 export function DashboardView() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [feedbackSummary, setFeedbackSummary] = useState<FeedbackSummary | null>(
+    null,
+  );
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
+  const [isFeedbackLoading, setIsFeedbackLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadSummary = useCallback(async () => {
     setIsLoading(true);
+    setIsFeedbackLoading(true);
     setError(null);
+    setFeedbackError(null);
 
-    try {
-      const nextSummary = await getDashboardSummary();
-      setSummary(nextSummary);
-    } catch (err) {
+    const [dashboardResult, feedbackResult] = await Promise.allSettled([
+      getDashboardSummary(),
+      getFeedbackSummary(),
+    ]);
+
+    if (dashboardResult.status === "fulfilled") {
+      setSummary(dashboardResult.value);
+    } else {
       setSummary(null);
       setError(
-        err instanceof Error
-          ? err.message
+        dashboardResult.reason instanceof Error
+          ? dashboardResult.reason.message
           : "Failed to load dashboard summary.",
       );
-    } finally {
-      setIsLoading(false);
     }
+
+    if (feedbackResult.status === "fulfilled") {
+      setFeedbackSummary(feedbackResult.value);
+    } else {
+      setFeedbackSummary(null);
+      setFeedbackError("Unable to load feedback summary.");
+    }
+
+    setIsLoading(false);
+    setIsFeedbackLoading(false);
   }, []);
 
   useEffect(() => {
@@ -114,6 +135,14 @@ export function DashboardView() {
 
                 <div className="mb-8">
                   <PortfolioSummaryCard collection={portfolioCollection} />
+                </div>
+
+                <div className="mb-8">
+                  <FeedbackSummaryCard
+                    summary={feedbackSummary}
+                    isLoading={isFeedbackLoading}
+                    error={feedbackError}
+                  />
                 </div>
 
                 <RecentDocuments documents={summary.recent_documents} />

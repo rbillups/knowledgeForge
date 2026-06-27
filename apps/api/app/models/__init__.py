@@ -1,5 +1,11 @@
 from app.models.document import Document
 from app.models.document_chunk import DocumentChunk
+from app.models.document_feedback import DocumentFeedback
 from app.models.knowledge_collection import KnowledgeCollection
 
-__all__ = ["Document", "DocumentChunk", "KnowledgeCollection"]
+__all__ = [
+    "Document",
+    "DocumentChunk",
+    "DocumentFeedback",
+    "KnowledgeCollection",
+]
