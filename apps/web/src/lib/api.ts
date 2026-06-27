@@ -1,4 +1,5 @@
 import type { Collection } from "@/types/collection";
+import type { ChatResponse } from "@/types/chat";
 import type { Document, DocumentUploadResponse } from "@/types/documents";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -85,12 +86,56 @@ export async function uploadDocument(
   return response.json() as Promise<DocumentUploadResponse>;
 }
 
+export async function chatWithKnowledgeBase(
+  collectionId: number,
+  question: string,
+  retrievalLimit?: number,
+): Promise<ChatResponse> {
+  const payload: {
+    collection_id: number;
+    question: string;
+    retrieval_limit?: number;
+  } = {
+    collection_id: collectionId,
+    question: question.trim(),
+  };
+
+  if (retrievalLimit !== undefined) {
+    payload.retrieval_limit = retrievalLimit;
+  }
+
+  const response = await fetch(`${getApiUrl()}/api/v1/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const detail = await readErrorMessage(response);
+    throw new ChatRequestError(response.status, detail);
+  }
+
+  return response.json() as Promise<ChatResponse>;
+}
+
 export class UploadRequestError extends Error {
   status: number;
 
   constructor(status: number, detail: string) {
     super(detail);
     this.name = "UploadRequestError";
+    this.status = status;
+  }
+}
+
+export class ChatRequestError extends Error {
+  status: number;
+
+  constructor(status: number, detail: string) {
+    super(detail);
+    this.name = "ChatRequestError";
     this.status = status;
   }
 }

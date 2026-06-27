@@ -1,6 +1,20 @@
-import type { ChatMessage } from "@/types/chat";
+type MockCitation = {
+  id: string;
+  title: string;
+  excerpt: string;
+  page?: string;
+  relevance: number;
+};
 
-export const mockChatMessages: ChatMessage[] = [
+type MockChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  citations?: MockCitation[];
+};
+
+export const mockChatMessages: MockChatMessage[] = [
   {
     id: "msg-1",
     role: "user",
@@ -30,29 +44,6 @@ export const mockChatMessages: ChatMessage[] = [
           "In the event of credential exposure, initiate emergency rotation within 4 hours...",
         page: "p. 12",
         relevance: 0.88,
-      },
-    ],
-  },
-  {
-    id: "msg-3",
-    role: "user",
-    content: "Who needs to approve the rotation?",
-    timestamp: "10:25 AM",
-  },
-  {
-    id: "msg-4",
-    role: "assistant",
-    content:
-      "Approval is required from a member of the Security Engineering team. For emergency rotations triggered by an incident, the on-call security lead can approve immediately and document the exception within 24 hours.",
-    timestamp: "10:25 AM",
-    citations: [
-      {
-        id: "cite-3",
-        title: "Security Operations Manual — Section 4.2.1",
-        excerpt:
-          "Routine rotations require Security Engineering approval. Emergency rotations may be authorized by the on-call security lead...",
-        page: "p. 48",
-        relevance: 0.94,
       },
     ],
   },
